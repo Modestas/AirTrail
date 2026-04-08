@@ -23,7 +23,13 @@
 
   const iconPath = $derived(airline?.iconPath ?? null);
   const hasIcon = $derived(!!iconPath);
-  const iconSrc = $derived(iconPath ? `/api/uploads/${iconPath}` : '');
+  const iconSrc = $derived(
+    iconPath
+      ? iconPath.startsWith('http')
+        ? iconPath
+        : `/api/uploads/${iconPath}`
+      : '',
+  );
 
   $effect(() => {
     iconPath;

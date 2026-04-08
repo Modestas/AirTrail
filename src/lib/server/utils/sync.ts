@@ -279,18 +279,18 @@ async function syncSingleAirlineIcon(
   const relativePath = `airlines/${airline.id}${iconData.extension}`;
   const oldIconPath = airline.iconPath;
 
-  const success = await uploadManager.saveFile(relativePath, iconData.buffer);
-  if (!success) return false;
+  const savedPath = await uploadManager.saveFile(relativePath, iconData.buffer);
+  if (!savedPath) return false;
 
   const shouldDeleteOld =
-    overwrite && oldIconPath && oldIconPath !== relativePath;
+    overwrite && oldIconPath && oldIconPath !== savedPath;
   if (shouldDeleteOld) {
     await uploadManager.deleteFile(oldIconPath);
   }
 
   await db
     .updateTable('airline')
-    .set({ iconPath: relativePath })
+    .set({ iconPath: savedPath })
     .where('id', '=', airline.id)
     .execute();
 

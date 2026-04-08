@@ -14,10 +14,19 @@ export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 class UploadManager {
   #uploadLocation: string | null = null;
+  #useVercelBlob: boolean = false;
   #isConfigured: boolean = false;
   #isReady: boolean = false;
 
   async init(): Promise<void> {
+    if (env.BLOB_READ_WRITE_TOKEN) {
+      this.#useVercelBlob = true;
+      this.#isConfigured = true;
+      this.#isReady = true;
+      console.log('Upload storage: Vercel Blob');
+      return;
+    }
+
     this.#uploadLocation = env.UPLOAD_LOCATION || null;
 
     if (!this.#uploadLocation) {
@@ -28,7 +37,6 @@ class UploadManager {
     this.#isConfigured = true;
 
     try {
-      // Check if directory exists
       if (!fs.existsSync(this.#uploadLocation)) {
         console.warn(
           `UPLOAD_LOCATION "${this.#uploadLocation}" does not exist. File uploads will fail.`,
@@ -36,13 +44,12 @@ class UploadManager {
         return;
       }
 
-      // Check read/write permissions by attempting to create and delete a test file
       const testFile = path.join(this.#uploadLocation, '.write_test');
       fs.writeFileSync(testFile, 'test');
       fs.unlinkSync(testFile);
 
       this.#isReady = true;
-      console.log(`Upload location configured: ${this.#uploadLocation}`);
+      console.log(`Upload storage: filesystem (${this.#uploadLocation})`);
     } catch (err) {
       console.warn(
         `UPLOAD_LOCATION "${this.#uploadLocation}" is not readable/writable. File uploads will fail.`,
@@ -68,28 +75,51 @@ class UploadManager {
     return path.join(this.#uploadLocation, relativePath);
   }
 
+  /**
+   * Save a file. Returns the path/URL to store in the database, or null on failure.
+   * - Filesystem: returns the relative path (e.g. "airlines/1.png")
+   * - Vercel Blob: returns the full blob URL
+   */
   async saveFile(
     relativePath: string,
     data: Buffer | Uint8Array,
-  ): Promise<boolean> {
-    if (!this.#isReady || !this.#uploadLocation) return false;
+  ): Promise<string | null> {
+    if (!this.#isReady) return null;
+
+    if (this.#useVercelBlob) {
+      const { put } = await import('@vercel/blob');
+      const blob = await put(relativePath, data, {
+        access: 'public',
+        addRandomSuffix: false,
+      });
+      return blob.url;
+    }
+
+    if (!this.#uploadLocation) return null;
 
     const fullPath = path.join(this.#uploadLocation, relativePath);
     const dir = path.dirname(fullPath);
 
-    // Ensure directory exists
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
     fs.writeFileSync(fullPath, data);
-    return true;
+    return relativePath;
   }
 
-  async deleteFile(relativePath: string): Promise<boolean> {
-    if (!this.#isReady || !this.#uploadLocation) return false;
+  async deleteFile(storedPath: string): Promise<boolean> {
+    if (!this.#isReady) return false;
 
-    const fullPath = path.join(this.#uploadLocation, relativePath);
+    if (this.#useVercelBlob) {
+      const { del } = await import('@vercel/blob');
+      await del(storedPath);
+      return true;
+    }
+
+    if (!this.#uploadLocation) return false;
+
+    const fullPath = path.join(this.#uploadLocation, storedPath);
     if (fs.existsSync(fullPath)) {
       fs.unlinkSync(fullPath);
       return true;
@@ -97,9 +127,11 @@ class UploadManager {
     return false;
   }
 
-  fileExists(relativePath: string): boolean {
+  fileExists(storedPath: string): boolean {
+    // Vercel Blob URLs are always assumed valid (no local check possible)
+    if (this.#useVercelBlob) return true;
     if (!this.#uploadLocation) return false;
-    return fs.existsSync(path.join(this.#uploadLocation, relativePath));
+    return fs.existsSync(path.join(this.#uploadLocation, storedPath));
   }
 }
 

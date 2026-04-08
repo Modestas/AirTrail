@@ -64,20 +64,20 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const success = await uploadManager.saveFile(relativePath, buffer);
+  const savedPath = await uploadManager.saveFile(relativePath, buffer);
 
-  if (!success) {
+  if (!savedPath) {
     return json({ error: 'Failed to save file' }, { status: 500 });
   }
 
   // Update airline record with icon path
   await db
     .updateTable('airline')
-    .set({ iconPath: relativePath })
+    .set({ iconPath: savedPath })
     .where('id', '=', airlineIdNum)
     .execute();
 
-  return json({ success: true, path: relativePath });
+  return json({ success: true, path: savedPath });
 };
 
 export const DELETE: RequestHandler = async ({ locals, request }) => {
