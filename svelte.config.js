@@ -9,7 +9,14 @@ const config = {
   preprocess: sequence([vitePreprocess(), preprocessMeltUI()]),
   kit: {
     adapter: adapter({
-      includeFiles: ['node_modules/geo-tz/data/**'],
+      includeFiles: [
+        'node_modules/geo-tz/data/timezones-1970.geojson.geo.dat',
+        'node_modules/geo-tz/data/timezones-1970.geojson.index.json',
+        'node_modules/geo-tz/data/timezones-now.geojson.geo.dat',
+        'node_modules/geo-tz/data/timezones-now.geojson.index.json',
+        'node_modules/geo-tz/data/timezones.geojson.geo.dat',
+        'node_modules/geo-tz/data/timezones.geojson.index.json',
+      ],
     }),
     version: { name: process.env.npm_package_version },
     csrf: {
