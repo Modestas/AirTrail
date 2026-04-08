@@ -11,17 +11,27 @@ import type { DB } from './schema';
 
 import { env } from '$env/dynamic/private';
 
-const isLocal = env.POSTGRES_PRISMA_URL?.includes('localhost');
-const sslConfig = isLocal
-  ? false
-  : env.SUPABASE_SSL_CERT
+function buildPoolConfig() {
+  const connectionString = env.POSTGRES_PRISMA_URL;
+  if (!connectionString) return { connectionString };
+
+  // Strip sslmode from the URL so pg doesn't override our ssl config
+  const url = new URL(connectionString);
+  const isLocal = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  url.searchParams.delete('sslmode');
+
+  if (isLocal) {
+    return { connectionString: url.toString() };
+  }
+
+  const ssl = env.SUPABASE_SSL_CERT
     ? { ca: env.SUPABASE_SSL_CERT.replace(/\\n/g, '\n'), rejectUnauthorized: true }
     : { rejectUnauthorized: false };
 
-export const pool = new pg.Pool({
-  connectionString: env.POSTGRES_PRISMA_URL,
-  ssl: sslConfig,
-});
+  return { connectionString: url.toString(), ssl };
+}
+
+export const pool = new pg.Pool(buildPoolConfig());
 const dialect = new PostgresDialect({ pool });
 
 export const db = new Kysely<DB>({
