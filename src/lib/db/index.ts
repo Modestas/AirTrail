@@ -11,7 +11,7 @@ import type { DB } from './schema';
 
 import { env } from '$env/dynamic/private';
 
-export const pool = new pg.Pool({ connectionString: env.DB_URL });
+export const pool = new pg.Pool({ connectionString: env.POSTGRES_PRISMA_URL });
 const dialect = new PostgresDialect({ pool });
 
 export const db = new Kysely<DB>({

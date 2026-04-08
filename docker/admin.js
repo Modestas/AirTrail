@@ -31,7 +31,7 @@ const ARGON2_OPTIONS = {
 // --- Helpers ---
 
 function getClient() {
-  return new pg.Client({ connectionString: process.env.DB_URL });
+  return new pg.Client({ connectionString: process.env.POSTGRES_URL_NON_POOLING });
 }
 
 async function withClient(fn) {

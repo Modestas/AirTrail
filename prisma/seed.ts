@@ -6,7 +6,7 @@ import pg from 'pg';
 
 import type { DB } from '$lib/db/schema';
 
-const pool = new pg.Pool({ connectionString: process.env.DB_URL });
+const pool = new pg.Pool({ connectionString: process.env.POSTGRES_PRISMA_URL });
 const dialect = new PostgresDialect({ pool });
 
 const db = new Kysely<DB>({

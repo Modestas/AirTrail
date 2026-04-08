@@ -26,7 +26,7 @@ const CREATE_TABLE = `
 `;
 
 async function migrate() {
-  const client = new pg.Client({ connectionString: process.env.DB_URL });
+  const client = new pg.Client({ connectionString: process.env.POSTGRES_URL_NON_POOLING });
   await client.connect();
 
   try {
