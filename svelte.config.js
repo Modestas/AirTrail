@@ -8,16 +8,7 @@ const origin = process.env.ORIGINS || process.env.ORIGIN;
 const config = {
   preprocess: sequence([vitePreprocess(), preprocessMeltUI()]),
   kit: {
-    adapter: adapter({
-      includeFiles: [
-        'node_modules/geo-tz/data/timezones-1970.geojson.geo.dat',
-        'node_modules/geo-tz/data/timezones-1970.geojson.index.json',
-        'node_modules/geo-tz/data/timezones-now.geojson.geo.dat',
-        'node_modules/geo-tz/data/timezones-now.geojson.index.json',
-        'node_modules/geo-tz/data/timezones.geojson.geo.dat',
-        'node_modules/geo-tz/data/timezones.geojson.index.json',
-      ],
-    }),
+    adapter: adapter(),
     version: { name: process.env.npm_package_version },
     csrf: {
       trustedOrigins: origin?.split(',').map((o) => o.trim()) ?? [],

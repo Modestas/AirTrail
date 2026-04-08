@@ -3,7 +3,7 @@
   "version": "3.8.0",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && node scripts/vercel-postbuild.js",
     "preview": "vite preview",
     "dev": "vite dev",
     "docker:buildx:setup": "bash docker/buildx-setup.sh",
