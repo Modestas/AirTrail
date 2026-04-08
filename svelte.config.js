@@ -8,7 +8,9 @@ const origin = process.env.ORIGINS || process.env.ORIGIN;
 const config = {
   preprocess: sequence([vitePreprocess(), preprocessMeltUI()]),
   kit: {
-    adapter: adapter(),
+    adapter: adapter({
+      includeFiles: ['node_modules/geo-tz/data/**'],
+    }),
     version: { name: process.env.npm_package_version },
     csrf: {
       trustedOrigins: origin?.split(',').map((o) => o.trim()) ?? [],
